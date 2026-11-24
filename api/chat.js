@@ -14,14 +14,69 @@ import dns from "node:dns";
 
 // Prefer IPv4 connections to prevent network connection delays on Windows
 if (dns && dns.setDefaultResultOrder) {
-  try { dns.setDefaultResultOrder("ipv4first"); } catch {}
+  try { dns.setDefaultResultOrder("ipv4first"); } catch { }
 }
 
 // ─── Model Configuration ───────────────────────────────────────────
-// Verify the current model name at https://aistudio.google.com/
-// Defaults to gemini-3.5-flash-lite for responsive, high-availability study assistance.
-// (gemini-2.5-flash was deprecated for new accounts in Google AI Studio).
-const MODEL = "gemini-3.5-flash-lite";
+// Primary model plus optional fallbacks, configurable from Vercel env vars.
+// Verify current model names at https://aistudio.google.com/
+const PRIMARY_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+const FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS || "gemini-3.5-flash")
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+
+// Temporary Google-side errors worth retrying: rate limit, server error, overload, timeout
+const RETRYABLE_STATUS = [429, 500, 503, 504];
+const ATTEMPT_TIMEOUT_MS = 10000; // max time for one attempt
+const TOTAL_BUDGET_MS = 25000;    // max time for all attempts together
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * One call to the Gemini API for a given model.
+ * Never throws: returns { ok, status, data?, message? } so the caller can decide
+ * whether to retry, fall back to another model, or give up.
+ */
+async function callGemini(model, apiKey, baseBody, timeoutMs) {
+  const body = structuredClone(baseBody);
+
+  // gemini-2.5 models: disable "thinking" so it can't use up all output tokens
+  if (model.includes("2.5")) {
+    body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return {
+        ok: false,
+        status: response.status,
+        message: errorData?.error?.message || "Gemini API request failed.",
+      };
+    }
+    return { ok: true, data: await response.json() };
+  } catch (err) {
+    // Timeout (AbortError) or network failure: treat as a temporary error
+    return {
+      ok: false,
+      status: err.name === "AbortError" ? 504 : 503,
+      message: err.message,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 // ─── Character Limits ──────────────────────────────────────────────
 // summarize mode allows longer text (full documents), other modes are shorter
@@ -151,113 +206,91 @@ export default async function handler(req, res) {
 
   // --- Build the Gemini API request ---
   try {
-    // Convert our message format to Gemini's format:
-    // - Our "assistant" role → Gemini's "model" role
-    // - Gemini expects "parts" array with text objects
+    // Convert our message format to Gemini's: "assistant" -> "model", text in "parts"
     let geminiMessages = messages.map((msg) => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }],
     }));
 
-    // For chat mode, limit to the last 20 messages to stay within token limits
+    // Chat mode: keep only the last 20 messages to stay within token limits
     if (mode === "chat" && geminiMessages.length > 20) {
       geminiMessages = geminiMessages.slice(-20);
     }
 
-    // Gemini requires the conversation to start with a "user" turn.
-    // If it starts with "model", we prepend a user message.
+    // Gemini requires the conversation to start with a "user" turn
     if (geminiMessages[0].role === "model") {
-      geminiMessages.unshift({
-        role: "user",
-        parts: [{ text: "Hello" }],
-      });
+      geminiMessages.unshift({ role: "user", parts: [{ text: "Hello" }] });
     }
 
-    // Build the request body for Gemini API
     const requestBody = {
-      // System instruction tells the AI what role to play
-      systemInstruction: {
-        parts: [{ text: SYSTEM_PROMPTS[mode] }],
-      },
-      // The conversation history
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPTS[mode] }] },
       contents: geminiMessages,
-      // Control the AI's output behaviour
-      generationConfig: {
-        temperature: 0.4,       // Lower = more focused/deterministic
-        maxOutputTokens: 2048,  // Cap the response length
-      },
+      generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
     };
 
-    // For gemini-2.5 models, disable "thinking" to prevent empty replies.
-    // The thinking process can consume all output tokens, leaving nothing
-    // for the actual response.
-    if (MODEL.includes("2.5")) {
-      requestBody.generationConfig.thinkingConfig = {
-        thinkingBudget: 0,
-      };
+    // --- Try: primary model (twice), then each fallback model once ---
+    const attempts = [PRIMARY_MODEL, PRIMARY_MODEL, ...FALLBACK_MODELS];
+    const deadline = Date.now() + TOTAL_BUDGET_MS;
+    let success = null;
+    let lastError = null;
+
+    for (let i = 0; i < attempts.length; i++) {
+      const remaining = deadline - Date.now();
+      if (remaining < 2000) break; // not enough time left for another attempt
+
+      const result = await callGemini(
+        attempts[i],
+        apiKey,
+        requestBody,
+        Math.min(ATTEMPT_TIMEOUT_MS, remaining)
+      );
+
+      if (result.ok) {
+        success = { data: result.data, model: attempts[i] };
+        break;
+      }
+
+      lastError = result;
+      console.error(`Gemini error (model ${attempts[i]}, attempt ${i + 1}):`, result.status, result.message);
+
+      // 404 = model name not available: skip straight to the next model.
+      // Other non-retryable errors (400/401/403) will not improve, so stop.
+      if (result.status !== 404 && !RETRYABLE_STATUS.includes(result.status)) break;
+
+      // Short pause before retrying the SAME model
+      if (attempts[i + 1] === attempts[i]) await sleep(1000);
     }
 
-    // --- Call the Gemini API with a 25-second timeout ---
-    // AbortController lets us cancel the request if it takes too long
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-
-    const geminiResponse = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,  // API key sent in header (not query param)
-      },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal,  // Attach the abort signal
-    });
-
-    clearTimeout(timeout);  // Cancel the timeout if request completed
-
-    // --- Handle Gemini API errors ---
-    if (!geminiResponse.ok) {
-      const errorData = await geminiResponse.json().catch(() => ({}));
-      const errorMsg = errorData?.error?.message || "Gemini API request failed.";
-      console.error("Gemini API error:", geminiResponse.status, errorMsg);
-      return res.status(502).json({
-        error: `AI service error: ${errorMsg}`,
-      });
+    // --- All attempts failed ---
+    if (!success) {
+      if (!lastError || RETRYABLE_STATUS.includes(lastError.status) || lastError.status === 404) {
+        return res.status(503).json({
+          error: "The AI is busy right now. Please try again in a few seconds.",
+        });
+      }
+      return res.status(502).json({ error: `AI service error: ${lastError.message}` });
     }
+
+    console.log("Answered by model:", success.model); // no keys or user text logged
 
     // --- Extract the text from Gemini's response ---
-    const data = await geminiResponse.json();
-
-    // Navigate the response structure to find the actual text
-    const candidate = data?.candidates?.[0];
+    const candidate = success.data?.candidates?.[0];
     const text = candidate?.content?.parts
-      ?.filter((p) => p.text)       // Filter out non-text parts (e.g. thinking)
-      ?.map((p) => p.text)          // Extract the text from each part
-      ?.join("")                     // Join all text parts together
+      ?.filter((p) => p.text)
+      ?.map((p) => p.text)
+      ?.join("")
       ?.trim();
 
-    // Check if the response was blocked or empty
     if (!text) {
-      const blockReason = candidate?.finishReason || "unknown";
-      console.error("Empty AI reply. Finish reason:", blockReason);
+      console.error("Empty AI reply. Finish reason:", candidate?.finishReason || "unknown");
       return res.status(502).json({
         error: "The AI could not generate a response. It may have been blocked by safety filters. Please rephrase your input.",
       });
     }
 
-    // --- Success! Return the AI's reply ---
     return res.status(200).json({ reply: text });
-
   } catch (err) {
-    // Handle specific error types
-    if (err.name === "AbortError") {
-      return res.status(502).json({
-        error: "The AI took too long to respond. Please try again with a shorter input.",
-      });
-    }
-
-    // Log the error for debugging (this stays on the server, never sent to client)
+    // Last-resort safety net: log on the server only, never send details to the client
     console.error("Unexpected server error:", err);
     return res.status(502).json({
       error: "Something went wrong while contacting the AI service. Please try again.",
