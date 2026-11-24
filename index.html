@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="shell-type" content="web_dashboard" />
+  <title>StudyMate – AI Study Assistant</title>
+
+  <!-- Google Fonts: Material Symbols Outlined & Inter -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" />
+
+  <!-- Browser Favicon -->
+  <link rel="icon" type="image/png" href="assets/studymate-logo.png" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-lowest": "#ffffff",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed-variant": "#484645",
+            "primary-fixed": "#e5e2e1",
+            "tertiary-fixed-dim": "#cac6c4",
+            "on-primary-fixed-variant": "#474746",
+            "inverse-primary": "#c8c6c5",
+            "surface": "#f9f9f9",
+            "outline": "#747878",
+            "error-container": "#ffdad6",
+            "surface-tint": "#5f5e5e",
+            "surface-container-low": "#f4f3f3",
+            "surface-container-high": "#e8e8e8",
+            "primary-fixed-dim": "#c8c6c5",
+            "secondary-container": "#e3e2e2",
+            "on-tertiary": "#ffffff",
+            "on-primary-fixed": "#1c1b1b",
+            "surface-container-highest": "#e2e2e2",
+            "on-primary-container": "#858383",
+            "primary-container": "#1c1b1b",
+            "tertiary": "#000000",
+            "surface-container": "#eeeeee",
+            "background": "#f9f9f9",
+            "secondary-fixed": "#e3e2e2",
+            "on-tertiary-container": "#868382",
+            "on-secondary": "#ffffff",
+            "on-primary": "#ffffff",
+            "error": "#ba1a1a",
+            "inverse-surface": "#2f3131",
+            "on-error-container": "#93000a",
+            "on-surface-variant": "#444748",
+            "surface-bright": "#f9f9f9",
+            "tertiary-fixed": "#e6e2df",
+            "on-secondary-container": "#646464",
+            "on-surface": "#1a1c1c",
+            "on-background": "#1a1c1c",
+            "surface-dim": "#dadada",
+            "surface-variant": "#e2e2e2",
+            "tertiary-container": "#1c1b1a",
+            "primary": "#000000",
+            "on-secondary-fixed-variant": "#464747",
+            "secondary-fixed-dim": "#c7c6c6",
+            "on-secondary-fixed": "#1b1c1c",
+            "secondary": "#5e5e5e",
+            "on-tertiary-fixed": "#1c1b1a",
+            "inverse-on-surface": "#f1f1f1",
+            "outline-variant": "#c4c7c7"
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            "2xl": "1rem",
+            full: "9999px"
+          },
+          spacing: {
+            "space-sm": "0.5rem",
+            "gutter": "1.5rem",
+            "margin-mobile": "1rem",
+            "space-lg": "1.5rem",
+            "margin": "2rem",
+            "space-xl": "2.5rem",
+            "space-md": "1rem",
+            "space-xs": "0.25rem",
+            "gutter-mobile": "1rem"
+          },
+          fontFamily: {
+            "display-lg": ["Inter", "sans-serif"],
+            "headline-md": ["Inter", "sans-serif"],
+            "headline-sm": ["Inter", "sans-serif"],
+            "body-md": ["Inter", "sans-serif"],
+            "label-sm": ["Inter", "sans-serif"],
+            "headline-lg": ["Inter", "sans-serif"],
+            "label-md": ["Inter", "sans-serif"],
+            "label-lg": ["Inter", "sans-serif"],
+            "body-sm": ["Inter", "sans-serif"],
+            "display-lg-mobile": ["Inter", "sans-serif"],
+            "body-lg": ["Inter", "sans-serif"]
+          },
+          fontSize: {
+            "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.03em", fontWeight: "600" }],
+            "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "600" }],
+            "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "body-md": ["14px", { lineHeight: "22px", letterSpacing: "0em", fontWeight: "400" }],
+            "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "600" }],
+            "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.02em", fontWeight: "600" }],
+            "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "500" }],
+            "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0em", fontWeight: "500" }],
+            "body-sm": ["13px", { lineHeight: "18px", letterSpacing: "0.005em", fontWeight: "400" }],
+            "display-lg-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "600" }],
+            "body-lg": ["16px", { lineHeight: "26px", letterSpacing: "-0.005em", fontWeight: "400" }]
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- pdf.js – client-side PDF parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- marked – markdown rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <!-- DOMPurify – safe XSS sanitization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+</head>
+
+<body class="bg-surface-container-lowest dark:bg-[#121212] font-body-md text-on-surface dark:text-[#f1f1f1] antialiased">
+
+  <!-- ==================== DESKTOP & MOBILE SIDEBAR ==================== -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-surface-container-low dark:bg-[#181818] border-r border-outline-variant dark:border-[#2a2a2a] z-50 flex flex-col justify-between hidden md:flex transition-transform duration-200">
+    <div class="flex flex-col flex-1 overflow-y-auto px-space-md pt-space-md">
+      <!-- App Brand & Beta Tag -->
+      <div class="flex items-center justify-between gap-space-xs pb-space-md">
+        <div class="flex items-center gap-space-xs cursor-pointer group" onclick="switchTab('home')" role="button" aria-label="StudyMate - AI Study Companion" tabindex="0">
+          <img alt="StudyMate - AI Study Companion" class="h-8 w-8 object-contain rounded-lg studymate-brand-logo" src="assets/studymate-logo.png" />
+          <span class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold">StudyMate</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-surface-container-highest dark:bg-[#2c2c2c] text-on-surface-variant dark:text-[#a0a0a0] uppercase tracking-wider">Beta</span>
+          <!-- Mobile Close Button -->
+          <button id="closeSidebarBtn" class="md:hidden p-1 rounded-lg text-secondary hover:text-on-surface" type="button">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick New Study Chat Button -->
+      <div class="py-space-xs">
+        <button id="newChatSidebarBtn" class="w-full flex items-center justify-between px-space-md py-space-sm rounded-xl border border-outline-variant dark:border-[#333] bg-surface-container-lowest dark:bg-[#202020] text-on-surface dark:text-white hover:bg-surface-container dark:hover:bg-[#282828] transition-colors shadow-sm" type="button">
+          <span class="flex items-center gap-space-xs font-label-lg text-label-lg">
+            <span class="material-symbols-outlined text-[18px]">add</span>New Study Chat
+          </span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant dark:text-secondary font-mono">⌘K</span>
+        </button>
+      </div>
+
+      <!-- Main Navigation Tabs -->
+      <nav class="mt-space-md flex flex-col gap-1" role="tablist">
+        <button class="tab-btn w-full flex items-center gap-space-sm px-space-sm py-2 rounded-xl transition-colors bg-surface-container dark:bg-[#2c2c2c] text-on-surface dark:text-white font-semibold text-left active" role="tab" aria-selected="true" aria-controls="tab-home" data-tab="home">
+          <span class="material-symbols-outlined text-[20px]">grid_view</span>
+          <span>Home</span>
+        </button>
+        <button class="tab-btn w-full flex items-center gap-space-sm px-space-sm py-2 rounded-xl font-label-lg text-label-lg text-on-surface-variant dark:text-[#a0a0a0] hover:bg-surface-container-high dark:hover:bg-[#282828] hover:text-on-surface dark:hover:text-white transition-colors text-left" role="tab" aria-selected="false" aria-controls="tab-summarizer" data-tab="summarizer">
+          <span class="material-symbols-outlined text-[20px]">description</span>
+          <span>Summarizer</span>
+        </button>
+        <button class="tab-btn w-full flex items-center gap-space-sm px-space-sm py-2 rounded-xl font-label-lg text-label-lg text-on-surface-variant dark:text-[#a0a0a0] hover:bg-surface-container-high dark:hover:bg-[#282828] hover:text-on-surface dark:hover:text-white transition-colors text-left" role="tab" aria-selected="false" aria-controls="tab-explainer" data-tab="explainer">
+          <span class="material-symbols-outlined text-[20px]">school</span>
+          <span>Question Explainer</span>
+        </button>
+        <button class="tab-btn w-full flex items-center gap-space-sm px-space-sm py-2 rounded-xl font-label-lg text-label-lg text-on-surface-variant dark:text-[#a0a0a0] hover:bg-surface-container-high dark:hover:bg-[#282828] hover:text-on-surface dark:hover:text-white transition-colors text-left" role="tab" aria-selected="false" aria-controls="tab-chatbot" data-tab="chatbot">
+          <span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+          <span>Study Chatbot</span>
+        </button>
+      </nav>
+
+      <!-- Recent Notebooks Section -->
+      <div class="mt-space-lg pt-space-sm border-t border-outline-variant dark:border-[#2a2a2a]">
+        <div class="flex items-center justify-between px-space-sm pb-space-xs">
+          <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Recent Notebooks</span>
+          <span class="material-symbols-outlined text-[16px] text-secondary">history</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <button class="recent-notebook-btn px-space-sm py-1.5 rounded-xl font-body-sm text-body-sm text-on-surface-variant dark:text-[#a0a0a0] hover:bg-surface-container dark:hover:bg-[#252525] hover:text-on-surface dark:hover:text-white truncate transition-colors text-left" data-prompt="Explain CS101 Algorithm Complexity Big-O bounds with examples">
+            CS101 Algorithm Complexity
+          </button>
+          <button class="recent-notebook-btn px-space-sm py-1.5 rounded-xl font-body-sm text-body-sm text-on-surface-variant dark:text-[#a0a0a0] hover:bg-surface-container dark:hover:bg-[#252525] hover:text-on-surface dark:hover:text-white truncate transition-colors text-left" data-prompt="Summarize Macroeconomics Midterm Notes on fiscal vs monetary transmission">
+            Macroeconomics Midterm Notes
+          </button>
+          <button class="recent-notebook-btn px-space-sm py-1.5 rounded-xl font-body-sm text-body-sm text-on-surface-variant dark:text-[#a0a0a0] hover:bg-surface-container dark:hover:bg-[#252525] hover:text-on-surface dark:hover:text-white truncate transition-colors text-left" data-prompt="Explain Organic Chemistry EAS reaction mechanisms step by step">
+            Organic Chemistry Reactions
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Profile & Footer Area -->
+    <div class="p-space-md border-t border-outline-variant dark:border-[#2a2a2a] bg-surface-container-low dark:bg-[#181818]">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-space-sm min-w-0">
+          <img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrOLx8WHXGGRnyQWDaJNFREiBdwfddOlhoE7EtCT0eqsd6nw-Y3BdEVTtHW8RYFZHu2TCFG0JuTB-fBIJ_n063GfseTXoFdplZttz9-39LUR93czP9ls0hV8Z4bKVd-uXYYxg1sJ3CYacfrJ-UZ9HQOpZ6K5LIr29fyCKl5pjWkRFjZxlf7kV7Tpf1N8PedJmIs7pH2kEbYazntVGoGTAZv9aMMM3nOuX_j5h0_z8" />
+          <div class="flex flex-col min-w-0">
+            <span class="font-label-md text-label-md text-on-surface dark:text-white truncate font-semibold">Alex Rivera</span>
+            <span class="font-label-sm text-label-sm text-secondary truncate">Campus Pro Plan</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 text-secondary">
+          <button class="p-1.5 rounded-xl hover:bg-surface-container dark:hover:bg-[#282828] hover:text-on-surface transition-colors" title="Settings" type="button">
+            <span class="material-symbols-outlined text-[18px]">settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Backdrop Overlay -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 hidden md:hidden"></div>
+
+  <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+  <div class="md:pl-64 flex flex-col min-h-screen">
+    
+    <!-- Top Shared Navigation Header -->
+    <header class="fixed top-0 left-0 md:left-64 right-0 h-14 bg-surface-container-lowest/90 dark:bg-[#141414]/90 backdrop-blur-xl border-b border-outline-variant dark:border-[#2a2a2a] z-40 flex items-center justify-between px-space-md">
+      <div class="flex items-center gap-space-sm">
+        <button id="mobileMenuBtn" class="md:hidden p-1.5 rounded-lg text-on-surface-variant dark:text-white hover:bg-surface-container dark:hover:bg-[#252525] transition-colors" type="button" aria-label="Toggle menu">
+          <span class="material-symbols-outlined text-[20px]">menu</span>
+        </button>
+        <div class="flex md:hidden items-center gap-space-xs cursor-pointer group" onclick="switchTab('home')" role="button" aria-label="StudyMate - AI Study Companion" tabindex="0">
+          <img alt="StudyMate - AI Study Companion" class="h-7 w-7 object-contain rounded-lg studymate-brand-logo" src="assets/studymate-logo.png" />
+          <span class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold">StudyMate</span>
+        </div>
+        <div class="hidden md:flex items-center gap-space-xs text-on-surface-variant dark:text-[#a0a0a0] font-label-md text-label-md">
+          <span class="material-symbols-outlined text-[16px]">school</span>
+          <span>Academic Workspace</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-space-sm">
+        <!-- Model Pill -->
+        <button class="flex items-center gap-space-xs px-space-sm py-1 rounded-full border border-outline-variant dark:border-[#333] text-on-surface-variant dark:text-[#c0c0c0] hover:bg-surface-container dark:hover:bg-[#252525] hover:text-on-surface font-label-md text-label-md transition-colors" type="button">
+          <span class="material-symbols-outlined text-[16px]">tune</span>
+          <span class="hidden sm:inline">Model: Academic-GPT</span>
+        </button>
+
+        <!-- Dark / Light Mode Toggle Button -->
+        <button id="themeToggle" class="p-1.5 rounded-full border border-outline-variant dark:border-[#333] text-on-surface-variant dark:text-white hover:bg-surface-container dark:hover:bg-[#252525] transition-colors" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+          <span class="theme-icon text-[18px]">🌙</span>
+        </button>
+
+        <div class="h-4 w-px bg-outline-variant dark:bg-[#333] mx-1 hidden sm:block"></div>
+        <img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrOLx8WHXGGRnyQWDaJNFREiBdwfddOlhoE7EtCT0eqsd6nw-Y3BdEVTtHW8RYFZHu2TCFG0JuTB-fBIJ_n063GfseTXoFdplZttz9-39LUR93czP9ls0hV8Z4bKVd-uXYYxg1sJ3CYacfrJ-UZ9HQOpZ6K5LIr29fyCKl5pjWkRFjZxlf7kV7Tpf1N8PedJmIs7pH2kEbYazntVGoGTAZv9aMMM3nOuX_j5h0_z8" />
+      </div>
+    </header>
+
+    <!-- Main Viewport -->
+    <main class="relative pt-14 w-full bg-surface-container-lowest dark:bg-[#121212] flex-1">
+      
+      <!-- ============================================================== -->
+      <!-- SCREEN 1: HOME (DASHBOARD - Stitch 759633b2b0df4945b1d484ac88fd0be6) -->
+      <!-- ============================================================== -->
+      <section id="tab-home" class="tab-panel active w-full" role="tabpanel" aria-labelledby="home-heading">
+        <div class="flex flex-col w-full">
+          <div class="w-full max-w-4xl mx-auto py-12 px-6 md:px-8">
+            
+            <!-- Hero / Introduction -->
+            <section class="text-center pt-4 pb-8">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high dark:bg-[#252525] text-on-surface-variant dark:text-[#c0c0c0] font-label-sm text-label-sm mb-6 uppercase tracking-wider">
+                <span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+                <span>Semester Workspace Active</span>
+              </div>
+              <h1 id="home-heading" class="font-headline-lg text-headline-lg md:font-display-lg md:text-display-lg text-on-surface dark:text-white tracking-tight font-semibold">
+                Your personal AI study companion.
+              </h1>
+              <p class="font-body-lg text-body-lg text-secondary dark:text-[#a0a0a0] mt-3 max-w-xl mx-auto">
+                Understand better. Learn faster. Study smarter.
+              </p>
+            </section>
+
+            <!-- Quick Prompt Input Bar (ChatGPT-style dock) -->
+            <div class="w-full mt-4 mb-12">
+              <div class="relative bg-surface-container-lowest dark:bg-[#1c1c1c] rounded-2xl border border-outline-variant/60 dark:border-[#333] shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center px-4 py-3.5 gap-3">
+                  <button class="text-secondary hover:text-on-surface transition-colors p-2 rounded-xl hover:bg-surface-container dark:hover:bg-[#282828] flex items-center justify-center" title="Attach lecture syllabus, PDF, or slides" type="button" onclick="switchTab('summarizer')">
+                    <span class="material-symbols-outlined text-[22px]">attach_file</span>
+                  </button>
+                  <input autocomplete="off" class="flex-1 bg-transparent text-on-surface dark:text-white font-body-md text-body-md placeholder:text-secondary focus:outline-none" id="study-query-input" placeholder="Ask a quick academic question or paste text to summarize..." type="text" />
+                  <div class="flex items-center gap-1.5">
+                    <span class="hidden sm:inline-block font-label-sm text-label-sm text-secondary px-2.5 py-1 rounded-full bg-surface-container-high dark:bg-[#282828] font-mono">Return ↵</span>
+                    <button class="w-9 h-9 rounded-xl bg-primary dark:bg-white text-on-primary dark:text-black hover:bg-on-surface-variant dark:hover:bg-neutral-200 flex items-center justify-center transition-colors" id="send-prompt-btn" type="button" title="Send query to chatbot">
+                      <span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Context Chips -->
+              <div class="flex flex-wrap items-center gap-2 mt-3.5 px-1">
+                <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mr-1">Quick prompts:</span>
+                <button class="quick-chip-btn font-body-sm text-body-sm text-secondary hover:text-on-surface dark:hover:text-white bg-surface-container-low dark:bg-[#222] hover:bg-surface-container dark:hover:bg-[#2c2c2c] px-3 py-1 rounded-full transition-colors" data-prompt="Explain the difference between P vs NP complexity in simple terms" type="button">
+                  P vs NP explained
+                </button>
+                <button class="quick-chip-btn font-body-sm text-body-sm text-secondary hover:text-on-surface dark:hover:text-white bg-surface-container-low dark:bg-[#222] hover:bg-surface-container dark:hover:bg-[#2c2c2c] px-3 py-1 rounded-full transition-colors" data-prompt="Summarize Keynesian vs Classical aggregate supply curves" type="button">
+                  Keynesian vs Classical
+                </button>
+                <button class="quick-chip-btn font-body-sm text-body-sm text-secondary hover:text-on-surface dark:hover:text-white bg-surface-container-low dark:bg-[#222] hover:bg-surface-container dark:hover:bg-[#2c2c2c] px-3 py-1 rounded-full transition-colors" data-prompt="How does resonance stabilization affect acidity in organic molecules?" type="button">
+                  Resonance stabilization
+                </button>
+              </div>
+            </div>
+
+            <!-- Core Feature Triad (3-Column Grid) -->
+            <section class="mt-4 mb-16">
+              <div class="flex items-center justify-between mb-4 px-1">
+                <h2 class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Core Tools</h2>
+                <span class="font-label-sm text-label-sm text-secondary">3 workflows</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Tool 1: Summarizer -->
+                <div class="bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/40 dark:border-[#2e2e2e] p-6 flex flex-col justify-between h-72 shadow-sm hover:shadow-md transition-all group">
+                  <div>
+                    <div class="w-11 h-11 rounded-xl bg-surface-container-low dark:bg-[#262626] flex items-center justify-center text-on-surface dark:text-white group-hover:bg-primary group-hover:text-on-primary dark:group-hover:bg-white dark:group-hover:text-black transition-colors mb-5">
+                      <span class="material-symbols-outlined text-[22px]">description</span>
+                    </div>
+                    <h3 class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold mb-2">Summarizer</h3>
+                    <p class="font-body-sm text-body-sm text-secondary dark:text-[#a0a0a0] leading-relaxed">Turn lengthy study material into concise, structured notes and revision bullet points.</p>
+                  </div>
+                  <div class="pt-4">
+                    <button class="w-full inline-flex items-center justify-between px-4 py-2.5 rounded-xl bg-surface-container-lowest dark:bg-[#222] text-on-surface dark:text-white hover:bg-surface-container dark:hover:bg-[#2c2c2c] font-label-lg text-label-lg transition-colors border border-outline-variant/60 dark:border-[#383838] shadow-sm" onclick="switchTab('summarizer')" type="button">
+                      <span>Start Summarizing</span>
+                      <span class="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tool 2: Question Explainer -->
+                <div class="bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/40 dark:border-[#2e2e2e] p-6 flex flex-col justify-between h-72 shadow-sm hover:shadow-md transition-all group">
+                  <div>
+                    <div class="w-11 h-11 rounded-xl bg-surface-container-low dark:bg-[#262626] flex items-center justify-center text-on-surface dark:text-white group-hover:bg-primary group-hover:text-on-primary dark:group-hover:bg-white dark:group-hover:text-black transition-colors mb-5">
+                      <span class="material-symbols-outlined text-[22px]">lightbulb</span>
+                    </div>
+                    <h3 class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold mb-2">Question Explainer</h3>
+                    <p class="font-body-sm text-body-sm text-secondary dark:text-[#a0a0a0] leading-relaxed">Understand difficult academic questions with simple explanations, step-by-step logic, and hints.</p>
+                  </div>
+                  <div class="pt-4">
+                    <button class="w-full inline-flex items-center justify-between px-4 py-2.5 rounded-xl bg-surface-container-lowest dark:bg-[#222] text-on-surface dark:text-white hover:bg-surface-container dark:hover:bg-[#2c2c2c] font-label-lg text-label-lg transition-colors border border-outline-variant/60 dark:border-[#383838] shadow-sm" onclick="switchTab('explainer')" type="button">
+                      <span>Explain a Question</span>
+                      <span class="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tool 3: Study Chatbot -->
+                <div class="bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/40 dark:border-[#2e2e2e] p-6 flex flex-col justify-between h-72 shadow-sm hover:shadow-md transition-all group">
+                  <div>
+                    <div class="w-11 h-11 rounded-xl bg-surface-container-low dark:bg-[#262626] flex items-center justify-center text-on-surface dark:text-white group-hover:bg-primary group-hover:text-on-primary dark:group-hover:bg-white dark:group-hover:text-black transition-colors mb-5">
+                      <span class="material-symbols-outlined text-[22px]">chat_bubble</span>
+                    </div>
+                    <h3 class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold mb-2">Study Chatbot</h3>
+                    <p class="font-body-sm text-body-sm text-secondary dark:text-[#a0a0a0] leading-relaxed">Ask questions, explore concepts interactively, and receive instant academic assistance on any lecture topic.</p>
+                  </div>
+                  <div class="pt-4">
+                    <button class="w-full inline-flex items-center justify-between px-4 py-2.5 rounded-xl bg-primary dark:bg-white text-on-primary dark:text-black hover:bg-on-surface-variant dark:hover:bg-neutral-200 font-label-lg text-label-lg transition-colors shadow-sm" onclick="switchTab('chatbot')" type="button">
+                      <span>Start Chatting</span>
+                      <span class="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Recent Study Notebooks & Activity Section -->
+            <section class="mt-8">
+              <div class="flex items-center justify-between mb-4 px-1">
+                <div>
+                  <h2 class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold">
+                    Recent Study Notebooks &amp; Activity
+                  </h2>
+                  <p class="font-body-sm text-body-sm text-secondary dark:text-[#a0a0a0] mt-0.5">
+                    Continue where you left off across active course modules
+                  </p>
+                </div>
+                <button class="font-label-md text-label-md text-secondary hover:text-on-surface dark:hover:text-white transition-colors flex items-center gap-1" onclick="switchTab('chatbot')">
+                  <span>View all history</span>
+                  <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+              </div>
+
+              <!-- Activity Items Stack -->
+              <div class="flex flex-col gap-3">
+                <div class="bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/40 dark:border-[#2e2e2e] p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer" onclick="openSampleStudy('Asymptotic Run-Time Bounds: Big-O, Theta, and Omega Derivations')">
+                  <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-surface-container-low dark:bg-[#252525] flex items-center justify-center text-on-surface dark:text-white shrink-0 mt-0.5">
+                      <span class="material-symbols-outlined text-[20px]">terminal</span>
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-2.5 flex-wrap">
+                        <span class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-surface-container-high dark:bg-[#2a2a2a] text-on-surface dark:text-white font-medium">Computer Science</span>
+                        <span class="font-body-sm text-body-sm text-secondary dark:text-[#888]">Module 4 • Algorithmic Analysis</span>
+                      </div>
+                      <h4 class="font-label-lg text-label-lg text-on-surface dark:text-white font-semibold mt-1.5 group-hover:text-primary transition-colors">Asymptotic Run-Time Bounds: Big-O, Theta, and Omega Derivations</h4>
+                      <p class="font-body-sm text-body-sm text-secondary dark:text-[#a0a0a0] mt-1 line-clamp-1">Full breakdown of master theorem proofs, recurrence relations, and worst-case sorting efficiency models.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between md:justify-end gap-4 shrink-0 pt-2 md:pt-0">
+                    <div class="text-right">
+                      <span class="font-label-sm text-label-sm text-secondary block">Updated 24m ago</span>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#bbb] font-mono">18 flashcards generated</span>
+                    </div>
+                    <span class="material-symbols-outlined text-[20px] text-secondary group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  </div>
+                </div>
+
+                <div class="bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/40 dark:border-[#2e2e2e] p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer" onclick="openSampleStudy('Monetary Transmission Mechanisms & Central Bank Balance Sheets')">
+                  <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-surface-container-low dark:bg-[#252525] flex items-center justify-center text-on-surface dark:text-white shrink-0 mt-0.5">
+                      <span class="material-symbols-outlined text-[20px]">trending_up</span>
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-2.5 flex-wrap">
+                        <span class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-surface-container-high dark:bg-[#2a2a2a] text-on-surface dark:text-white font-medium">Economics</span>
+                        <span class="font-body-sm text-body-sm text-secondary dark:text-[#888]">Econ 202 • Macroeconomic Policy</span>
+                      </div>
+                      <h4 class="font-label-lg text-label-lg text-on-surface dark:text-white font-semibold mt-1.5 group-hover:text-primary transition-colors">Monetary Transmission Mechanisms &amp; Central Bank Balance Sheets</h4>
+                      <p class="font-body-sm text-body-sm text-secondary dark:text-[#a0a0a0] mt-1 line-clamp-1">Executive summary from 38-page lecture reading: open market operations, inflation targeting, and liquidity traps.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between md:justify-end gap-4 shrink-0 pt-2 md:pt-0">
+                    <div class="text-right">
+                      <span class="font-label-sm text-label-sm text-secondary block">Updated 3h ago</span>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#bbb] font-mono">Summary &amp; Key Concepts</span>
+                    </div>
+                    <span class="material-symbols-outlined text-[20px] text-secondary group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  </div>
+                </div>
+
+                <div class="bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/40 dark:border-[#2e2e2e] p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer" onclick="openSampleStudy('Electrophilic Aromatic Substitution (EAS): Substituent Directing Effects')">
+                  <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-surface-container-low dark:bg-[#252525] flex items-center justify-center text-on-surface dark:text-white shrink-0 mt-0.5">
+                      <span class="material-symbols-outlined text-[20px]">science</span>
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-2.5 flex-wrap">
+                        <span class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-surface-container-high dark:bg-[#2a2a2a] text-on-surface dark:text-white font-medium">Chemistry</span>
+                        <span class="font-body-sm text-body-sm text-secondary dark:text-[#888]">CHEM 220 • Organic Mechanisms</span>
+                      </div>
+                      <h4 class="font-label-lg text-label-lg text-on-surface dark:text-white font-semibold mt-1.5 group-hover:text-primary transition-colors">Electrophilic Aromatic Substitution (EAS): Substituent Directing Effects</h4>
+                      <p class="font-body-sm text-body-sm text-secondary dark:text-[#a0a0a0] mt-1 line-clamp-1">Question explainer chat explaining ortho/para vs meta orientation under carbocation resonance structures.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between md:justify-end gap-4 shrink-0 pt-2 md:pt-0">
+                    <div class="text-right">
+                      <span class="font-label-sm text-label-sm text-secondary block">Updated Yesterday</span>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#bbb] font-mono">12 Q&amp;A turns</span>
+                    </div>
+                    <span class="material-symbols-outlined text-[20px] text-secondary group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Campus Study Pulse / Focus Metric Banner -->
+            <section class="mt-12 pt-8">
+              <div class="bg-surface-container-low dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/40 dark:border-[#2e2e2e] p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-surface-container-lowest dark:bg-[#222] flex items-center justify-center text-on-surface dark:text-white shrink-0 shadow-sm">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Weekly Focus Efficiency</span>
+                    <div class="flex items-baseline gap-2 mt-0.5">
+                      <span class="font-headline-md text-headline-md font-semibold text-on-surface dark:text-white">14.6 hrs</span>
+                      <span class="font-body-sm text-body-sm text-secondary dark:text-[#999]">synthesized across 6 courses</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+                  <div class="flex flex-col items-end">
+                    <div class="flex items-center gap-1.5 text-secondary font-label-sm text-label-sm mb-1">
+                      <span>Retention Velocity</span>
+                      <span class="font-semibold text-on-surface dark:text-white">+28%</span>
+                    </div>
+                    <svg class="w-36 h-7 overflow-visible" fill="none" viewBox="0 0 120 24">
+                      <path class="text-on-surface dark:text-white" d="M0 20 L20 18 L40 14 L60 16 L80 9 L100 11 L120 3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"></path>
+                      <circle class="fill-on-surface dark:fill-white" cx="120" cy="3" r="2.5"></circle>
+                    </svg>
+                  </div>
+                  <div class="h-8 w-px bg-surface-container-highest dark:bg-[#333] hidden md:block"></div>
+                  <button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-container-lowest dark:bg-[#222] hover:bg-surface-container dark:hover:bg-[#2c2c2c] text-on-surface dark:text-white font-label-md text-label-md transition-colors border border-outline-variant/60 dark:border-[#383838] shadow-sm" onclick="switchTab('chatbot')" type="button">
+                    <span class="material-symbols-outlined text-[16px]">add_chart</span>
+                    <span>Analytics</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============================================================== -->
+      <!-- SCREEN 2: SUMMARIZER (Stitch ef6eabe98a174140ae405db56600f3d9) -->
+      <!-- ============================================================== -->
+      <section id="tab-summarizer" class="tab-panel hidden w-full" role="tabpanel" aria-labelledby="summarizer-heading">
+        <div class="flex flex-col w-full">
+          <div class="max-w-4xl mx-auto w-full py-10 px-6 sm:px-8">
+            
+            <!-- Header Section -->
+            <div class="flex flex-col mb-8">
+              <div class="flex items-center gap-space-xs text-on-surface-variant dark:text-[#aaa] font-label-sm text-label-sm uppercase tracking-wider mb-2">
+                <span class="material-symbols-outlined text-[15px]">auto_stories</span>
+                <span>Study Synthesizer • Academic Engine v3.4</span>
+              </div>
+              <h1 id="summarizer-heading" class="font-headline-lg text-headline-lg text-on-surface dark:text-white tracking-tight font-semibold">
+                Summarize your study material
+              </h1>
+              <p class="font-body-lg text-body-lg text-secondary dark:text-[#a0a0a0] mt-2 max-w-2xl">
+                Condense research papers, lecture transcripts, and textbook chapters into clear, actionable study notes.
+              </p>
+            </div>
+
+            <!-- Mode Selector / Segmented Control -->
+            <div class="flex flex-col gap-space-sm mb-4">
+              <div class="flex items-center justify-between">
+                <label class="font-label-md text-label-md text-secondary uppercase tracking-wider">Output Synthesis Format</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#888]">Select style below</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-surface-container dark:bg-[#1f1f1f] rounded-2xl">
+                <button class="format-btn flex items-center justify-center gap-space-xs py-2 px-space-sm rounded-xl font-label-lg text-label-lg transition-all bg-surface-container-lowest dark:bg-[#2b2b2b] text-on-surface dark:text-white shadow-sm font-semibold active" data-format="takeaways" type="button">
+                  <span class="material-symbols-outlined text-[16px]">checklist</span>
+                  <span>Key Takeaways</span>
+                </button>
+                <button class="format-btn flex items-center justify-center gap-space-xs py-2 px-space-sm rounded-xl font-label-lg text-label-lg transition-all text-secondary dark:text-[#999] hover:text-on-surface dark:hover:text-white hover:bg-surface-container-low dark:hover:bg-[#252525] font-medium" data-format="bullets" type="button">
+                  <span class="material-symbols-outlined text-[16px]">format_list_bulleted</span>
+                  <span>Bullet Points</span>
+                </button>
+                <button class="format-btn flex items-center justify-center gap-space-xs py-2 px-space-sm rounded-xl font-label-lg text-label-lg transition-all text-secondary dark:text-[#999] hover:text-on-surface dark:hover:text-white hover:bg-surface-container-low dark:hover:bg-[#252525] font-medium" data-format="executive" type="button">
+                  <span class="material-symbols-outlined text-[16px]">summarize</span>
+                  <span>Executive Brief</span>
+                </button>
+                <button class="format-btn flex items-center justify-center gap-space-xs py-2 px-space-sm rounded-xl font-label-lg text-label-lg transition-all text-secondary dark:text-[#999] hover:text-on-surface dark:hover:text-white hover:bg-surface-container-low dark:hover:bg-[#252525] font-medium" data-format="flashcards" type="button">
+                  <span class="material-symbols-outlined text-[16px]">style</span>
+                  <span>Flashcard Deck</span>
+                </button>
+              </div>
+              <!-- Hidden select to keep script.js summaryStyle intact -->
+              <select id="summaryStyle" class="hidden">
+                <option value="bullet points" selected>Bullet points</option>
+                <option value="key takeaways">Key takeaways</option>
+                <option value="executive brief">Executive summary</option>
+                <option value="flashcards">Flashcard style</option>
+              </select>
+            </div>
+
+            <!-- Main Input Box with integrated controls -->
+            <div class="bg-surface-container-low dark:bg-[#1a1a1a] p-space-md flex flex-col transition-all duration-150 focus-within:bg-surface-container-lowest dark:focus-within:bg-[#202020] shadow-sm rounded-2xl border border-outline-variant/60 dark:border-[#2e2e2e]">
+              <div class="flex items-center justify-between pb-space-xs text-on-surface-variant dark:text-[#aaa]">
+                <div class="flex items-center gap-space-xs font-label-sm text-label-sm">
+                  <span class="inline-block w-2 h-2 rounded-full bg-primary dark:bg-white"></span>
+                  <span id="sourceTitle">Source Input: Paste study material or upload file</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button class="font-label-sm text-label-sm text-secondary hover:text-on-surface dark:hover:text-white underline underline-offset-2" id="sampleBtn" type="button">
+                    Load Alternate Sample
+                  </button>
+                </div>
+              </div>
+
+              <textarea class="w-full bg-transparent text-on-surface dark:text-white font-body-md text-body-md placeholder:text-secondary focus:outline-none resize-none pt-2 leading-relaxed" id="summarizeInput" placeholder="Paste your notes, textbook content or study material here..." rows="7"></textarea>
+
+              <!-- File Information Bar (Hidden by default) -->
+              <div id="fileInfo" class="mt-2 p-2 bg-surface-container-high dark:bg-[#252525] rounded-xl flex items-center justify-between font-label-sm text-label-sm" hidden>
+                <div class="flex items-center gap-2 text-on-surface dark:text-white">
+                  <span class="material-symbols-outlined text-[18px]">attachment</span>
+                  <span id="fileName" class="font-semibold"></span>
+                  <span id="filePages" class="text-secondary font-mono"></span>
+                </div>
+                <button id="fileClear" class="text-secondary hover:text-on-surface p-1" type="button" title="Remove file">
+                  <span class="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+
+              <!-- File Status / Error Message -->
+              <div id="fileStatus" class="mt-2 status-msg" hidden></div>
+
+              <!-- Bottom controls strip -->
+              <div class="pt-space-md mt-space-xs flex flex-wrap items-center justify-between gap-space-sm border-t border-outline-variant/40 dark:border-[#2a2a2a]">
+                <div class="flex items-center gap-space-sm flex-wrap">
+                  <!-- File Drop Zone / Upload Button -->
+                  <div id="fileDropZone" class="cursor-pointer flex items-center gap-space-xs px-3 py-1.5 bg-surface-container-lowest dark:bg-[#242424] hover:bg-surface-container dark:hover:bg-[#2c2c2c] text-on-surface dark:text-white font-label-md text-label-md transition-colors shadow-sm rounded-xl border border-outline-variant/40 dark:border-[#333]">
+                    <span class="material-symbols-outlined text-[16px]">upload_file</span>
+                    <span>Upload PDF / TXT</span>
+                    <input accept=".pdf,.txt,.md" class="hidden" id="fileInput" type="file" />
+                  </div>
+                  <button class="flex items-center gap-1 px-2.5 py-1.5 text-secondary hover:text-on-surface dark:hover:text-white hover:bg-surface-container dark:hover:bg-[#242424] font-label-md text-label-md transition-colors rounded-xl" id="clearBtn" type="button">
+                    <span class="material-symbols-outlined text-[16px]">backspace</span>
+                    <span>Clear</span>
+                  </button>
+                  <span class="font-label-sm text-label-sm text-secondary pl-1 font-mono" id="summarizeCharCount">0 / 30,000 characters</span>
+                </div>
+                
+                <div class="flex items-center gap-space-xs">
+                  <div class="hidden sm:flex items-center gap-1 font-label-sm text-label-sm text-secondary pr-2">
+                    <span class="material-symbols-outlined text-[14px]">bolt</span>
+                    <span>Academic-GPT 4o</span>
+                  </div>
+                  <button class="bg-primary dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 text-on-primary dark:text-black px-5 py-2.5 rounded-full transition-colors flex items-center gap-2 shadow-sm active:scale-[0.98] cursor-pointer" id="summarizeBtn" type="button">
+                    <span class="material-symbols-outlined text-[18px]" id="btnIcon">auto_awesome</span>
+                    <span class="font-medium tracking-normal text-[15px] btn-text" id="btnText">Generate Summary</span>
+                    <span class="btn-loader hidden w-4 h-4 rounded-full border-2 border-white dark:border-black border-t-transparent animate-spin"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Processing Indicator (hidden by default) -->
+            <div class="my-8 p-space-md bg-surface-container dark:bg-[#1e1e1e] flex items-center justify-between hidden rounded-2xl" id="processingState">
+              <div class="flex items-center gap-space-sm">
+                <div class="w-4 h-4 rounded-full border-2 border-primary dark:border-white border-t-transparent animate-spin"></div>
+                <span class="font-body-md text-body-md text-on-surface dark:text-white">Extracting semantic hierarchies and exam-critical theorems...</span>
+              </div>
+              <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider font-mono">Synthesizing...</span>
+            </div>
+
+            <!-- AI Output Summary Section -->
+            <div id="summarizeEmpty" class="mt-8 py-12 text-center text-secondary border border-dashed border-outline-variant dark:border-[#333] rounded-2xl">
+              <span class="material-symbols-outlined text-[36px] mb-2 opacity-50">auto_stories</span>
+              <p class="font-body-md">Paste study notes or lecture slides above and click "Generate Summary".</p>
+            </div>
+
+            <section id="summarizeOutput" class="mt-8 bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/60 dark:border-[#2a2a2a] shadow-sm overflow-hidden" hidden>
+              <!-- Meta header bar with Copy and Save -->
+              <div class="bg-surface-container-low dark:bg-[#202020] px-6 py-3.5 flex items-center justify-between border-b border-outline-variant/40 dark:border-[#2e2e2e]">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-primary dark:bg-white inline-block"></span>
+                  <span class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold">Structured Synthesis</span>
+                  <span class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-surface-container-high dark:bg-[#2e2e2e] text-on-surface-variant dark:text-[#ccc] font-mono">Verified Summary</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button class="copy-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-secondary hover:text-on-surface dark:hover:text-white bg-surface-container-lowest dark:bg-[#252525] hover:bg-surface-container dark:hover:bg-[#303030] transition-colors border border-outline-variant/40 dark:border-[#383838]" data-target="summarizeContent" type="button">
+                    <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                    <span>Copy Markdown</span>
+                  </button>
+                  <button id="saveNotebookBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-secondary hover:text-on-surface dark:hover:text-white bg-surface-container-lowest dark:bg-[#252525] hover:bg-surface-container dark:hover:bg-[#303030] transition-colors border border-outline-variant/40 dark:border-[#383838]" type="button">
+                    <span class="material-symbols-outlined text-[16px]">bookmark_add</span>
+                    <span>Save Notebook</span>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Markdown Content Container -->
+              <div id="summarizeContent" class="output-content p-6 sm:p-8 font-body-md leading-relaxed text-on-surface dark:text-[#e0e0e0]"></div>
+            </section>
+
+            <!-- Keyboard Shortcuts Legend -->
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-secondary font-label-sm text-label-sm">
+              <span class="flex items-center gap-1">
+                <kbd class="px-2 py-0.5 rounded-lg bg-surface-container dark:bg-[#222] text-on-surface dark:text-white font-mono text-[10px]">⌘ + Enter</kbd>
+                <span>Generate</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <kbd class="px-2 py-0.5 rounded-lg bg-surface-container dark:bg-[#222] text-on-surface dark:text-white font-mono text-[10px]">⌘ + C</kbd>
+                <span>Copy Markdown</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <kbd class="px-2 py-0.5 rounded-lg bg-surface-container dark:bg-[#222] text-on-surface dark:text-white font-mono text-[10px]">⌘ + S</kbd>
+                <span>Save Notebook</span>
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============================================================== -->
+      <!-- SCREEN 3: QUESTION EXPLAINER (Stitch 3ed55da2ebcc4b0c8546a1fdd22103cb) -->
+      <!-- ============================================================== -->
+      <section id="tab-explainer" class="tab-panel hidden w-full" role="tabpanel" aria-labelledby="explainer-heading">
+        <div class="flex flex-col w-full">
+          <div class="w-full max-w-4xl mx-auto py-10 px-6 sm:px-8">
+            
+            <!-- Top Header -->
+            <div class="mb-8">
+              <div class="flex items-center gap-space-xs text-secondary mb-2">
+                <span class="material-symbols-outlined text-[16px]">school</span>
+                <span class="font-label-sm text-label-sm uppercase tracking-wider">Concept Diagnostic &amp; Decomposition</span>
+              </div>
+              <h1 id="explainer-heading" class="font-headline-lg text-headline-lg text-on-surface dark:text-white tracking-tight font-semibold">
+                Understand any question
+              </h1>
+              <p class="font-body-lg text-body-lg text-secondary dark:text-[#a0a0a0] mt-1">
+                Get clear, step-by-step explanations.
+              </p>
+            </div>
+
+            <!-- Question Input Block -->
+            <div class="bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/60 dark:border-[#2e2e2e] shadow-sm p-6 sm:p-7 mb-10">
+              <!-- Pedagogical Mode Pills -->
+              <div class="flex flex-wrap items-center gap-2 mb-4">
+                <button class="mode-tab px-3.5 py-1.5 rounded-full font-label-md text-label-md bg-primary dark:bg-white text-on-primary dark:text-black transition-all active" data-level="detailed" type="button">
+                  Step-by-Step Breakdown
+                </button>
+                <button class="mode-tab px-3.5 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low dark:bg-[#252525] text-on-surface-variant dark:text-[#a0a0a0] hover:bg-surface-container dark:hover:bg-[#2c2c2c] transition-all" data-level="simple" type="button">
+                  Explain Like I'm 5
+                </button>
+                <button class="mode-tab px-3.5 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low dark:bg-[#252525] text-on-surface-variant dark:text-[#a0a0a0] hover:bg-surface-container dark:hover:bg-[#2c2c2c] transition-all" data-level="first-principles" type="button">
+                  First Principles
+                </button>
+                <button class="mode-tab px-3.5 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low dark:bg-[#252525] text-on-surface-variant dark:text-[#a0a0a0] hover:bg-surface-container dark:hover:bg-[#2c2c2c] transition-all" data-level="exam" type="button">
+                  Exam Solution
+                </button>
+              </div>
+              <!-- Hidden select to keep script.js explainLevel intact -->
+              <select id="explainLevel" class="hidden">
+                <option value="detailed" selected>Detailed step-by-step</option>
+                <option value="simple">Simple (ELI5)</option>
+                <option value="first-principles">First principles</option>
+                <option value="exam">Exam solution</option>
+              </select>
+
+              <!-- Question Textarea Container -->
+              <div class="relative bg-surface dark:bg-[#202020] rounded-xl p-4 transition-all border border-outline-variant/40 dark:border-[#2d2d2d]">
+                <label class="sr-only" for="explainInput">Enter your academic question here</label>
+                <textarea class="w-full bg-transparent resize-y font-body-md text-body-md text-on-surface dark:text-white focus:outline-none placeholder:text-secondary leading-relaxed" id="explainInput" placeholder="Enter your academic question here..." rows="4"></textarea>
+                <div class="flex items-center justify-between pt-2">
+                  <span class="font-label-sm text-label-sm text-secondary font-mono" id="explainCharCount">0 / 8,000 characters</span>
+                  <button class="font-label-sm text-label-sm text-secondary hover:text-on-surface dark:hover:text-white transition-colors flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-surface-container dark:hover:bg-[#282828]" onclick="document.getElementById('explainInput').value=''; updateCharCount(document.getElementById('explainInput'), document.getElementById('explainCharCount'), 8000);" type="button">
+                    <span class="material-symbols-outlined text-[14px]">close</span>Clear
+                  </button>
+                </div>
+              </div>
+
+              <!-- Bottom Bar with Subject Domain & CTA -->
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-5 pt-5 bg-surface-container-low/40 dark:bg-[#181818] -mx-6 sm:-mx-7 -mb-6 sm:-mb-7 px-6 sm:px-7 py-4 rounded-b-2xl border-t border-outline-variant/40 dark:border-[#2a2a2a]">
+                <div class="flex items-center flex-wrap gap-2.5">
+                  <div class="relative">
+                    <select id="explainSubject" aria-label="Subject Domain" class="appearance-none bg-surface-container-lowest dark:bg-[#222] text-on-surface dark:text-white font-label-md text-label-md pl-3 pr-8 py-2 rounded-xl cursor-pointer hover:bg-surface-container-low dark:hover:bg-[#282828] transition-colors focus:outline-none border border-outline-variant/60 dark:border-[#383838]">
+                      <option value="">General Academic Context</option>
+                      <option value="Computer Science / Algorithms">Computer Science / Algorithms</option>
+                      <option value="Discrete Mathematics">Discrete Mathematics</option>
+                      <option value="Theoretical Physics">Theoretical Physics</option>
+                      <option value="Econometrics & Macroeconomics">Econometrics &amp; Macroeconomics</option>
+                      <option value="Organic Chemistry">Organic Chemistry</option>
+                    </select>
+                    <span class="material-symbols-outlined text-[18px] text-secondary pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">expand_more</span>
+                  </div>
+                  <button class="sample-question-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-label-md text-label-md text-on-surface-variant dark:text-[#ccc] hover:text-on-surface dark:hover:text-white bg-surface-container-lowest dark:bg-[#222] hover:bg-surface-container-low dark:hover:bg-[#282828] transition-colors border border-outline-variant/60 dark:border-[#383838]" type="button">
+                    <span class="material-symbols-outlined text-[18px]">lightbulb</span>
+                    <span>Try Dijkstra Invariant</span>
+                  </button>
+                </div>
+                <button class="inline-flex items-center justify-center gap-2 bg-primary dark:bg-white text-on-primary dark:text-black px-6 py-2.5 rounded-xl font-label-lg text-label-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-sm cursor-pointer" id="explainBtn" type="button">
+                  <span class="btn-text">Explain Question</span>
+                  <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  <span class="btn-loader hidden w-4 h-4 rounded-full border-2 border-white dark:border-black border-t-transparent animate-spin"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="explainEmpty" class="py-12 text-center text-secondary border border-dashed border-outline-variant dark:border-[#333] rounded-2xl mb-12">
+              <span class="material-symbols-outlined text-[36px] mb-2 opacity-50">school</span>
+              <p class="font-body-md">Enter any academic question above and click "Explain Question".</p>
+            </div>
+
+            <!-- AI Response Section -->
+            <section id="explainOutput" class="bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl border border-outline-variant/60 dark:border-[#2e2e2e] shadow-sm overflow-hidden mb-12" hidden>
+              <!-- Section Meta Bar -->
+              <div class="bg-surface-container-low dark:bg-[#202020] px-6 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/40 dark:border-[#2e2e2e]">
+                <div class="flex items-center gap-3">
+                  <span class="w-2.5 h-2.5 rounded-full bg-primary dark:bg-white inline-block"></span>
+                  <h2 class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold">Step-by-Step Explanation</h2>
+                  <span class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-surface-container-high dark:bg-[#2b2b2b] text-on-surface-variant dark:text-[#ccc] font-mono uppercase tracking-wider">Verified Solution</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button class="copy-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-secondary hover:text-on-surface dark:hover:text-white bg-surface-container-lowest dark:bg-[#252525] hover:bg-surface-container dark:hover:bg-[#303030] transition-colors border border-outline-variant/40 dark:border-[#383838]" data-target="explainContent" id="copy-btn" type="button">
+                    <span class="material-symbols-outlined text-[16px]" id="copy-icon">content_copy</span>
+                    <span id="copy-label">Copy Response</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Core Educational Body -->
+              <div class="output-content p-6 sm:p-8 flex flex-col gap-6 font-body-md leading-relaxed text-on-surface dark:text-[#e0e0e0]" id="explainContent"></div>
+
+              <!-- Follow-Up Interaction Bar -->
+              <div class="bg-surface-container-low dark:bg-[#1c1c1c] px-6 sm:px-8 py-5 border-t border-outline-variant/40 dark:border-[#2a2a2a]">
+                <label class="block font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-2 font-mono" for="follow-up-input">
+                  Have a question about this step?
+                </label>
+                <div class="flex items-center gap-2 bg-surface-container-lowest dark:bg-[#242424] rounded-xl p-2 shadow-sm border border-outline-variant/40 dark:border-[#333]">
+                  <span class="material-symbols-outlined text-[20px] text-secondary pl-2">subdirectory_arrow_right</span>
+                  <input class="flex-1 bg-transparent px-2 font-body-md text-body-md text-on-surface dark:text-white placeholder:text-secondary focus:outline-none" id="follow-up-input" placeholder="Ask a follow-up or explore further in Chatbot..." type="text" />
+                  <button id="sendFollowUpBtn" aria-label="Send Follow-up Question" class="p-2 rounded-xl bg-primary dark:bg-white text-on-primary dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shrink-0" type="button">
+                    <span class="material-symbols-outlined text-[18px]">send</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- Additional Recommended Drill-Downs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8">
+              <div class="bg-surface-container-lowest dark:bg-[#1a1a1a] p-5 rounded-2xl border border-outline-variant/40 dark:border-[#2e2e2e] shadow-sm flex flex-col justify-between hover:bg-surface dark:hover:bg-[#222] transition-colors cursor-pointer group" onclick="askConceptInChat('Explain Johnson\'s Algorithm and how Bellman-Ford reweighting enables Dijkstra on negative edges')">
+                <div>
+                  <span class="font-label-sm text-label-sm font-mono text-secondary uppercase">Follow-Up Concept</span>
+                  <h4 class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold mt-1">Johnson's Algorithm</h4>
+                  <p class="font-body-sm text-body-sm text-secondary dark:text-[#a0a0a0] mt-1">Using Bellman-Ford reweighting technique to safely enable Dijkstra on sparse graphs with negative edges.</p>
+                </div>
+                <div class="flex items-center gap-1 font-label-md text-label-md text-on-surface dark:text-white mt-4 font-semibold group-hover:translate-x-1 transition-transform">
+                  <span>Explore connection</span>
+                  <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </div>
+              </div>
+
+              <div class="bg-surface-container-lowest dark:bg-[#1a1a1a] p-5 rounded-2xl border border-outline-variant/40 dark:border-[#2e2e2e] shadow-sm flex flex-col justify-between hover:bg-surface dark:hover:bg-[#222] transition-colors cursor-pointer group" onclick="askConceptInChat('Explain the A* Search invariant and why heuristic admissibility is required')">
+                <div>
+                  <span class="font-label-sm text-label-sm font-mono text-secondary uppercase">Problem Set Diagnostic</span>
+                  <h4 class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold mt-1">A* Search Invariant</h4>
+                  <p class="font-body-sm text-body-sm text-secondary dark:text-[#a0a0a0] mt-1">How heuristic consistency (admissibility) maintains Dijkstra's greedy correctness guarantees.</p>
+                </div>
+                <div class="flex items-center gap-1 font-label-md text-label-md text-on-surface dark:text-white mt-4 font-semibold group-hover:translate-x-1 transition-transform">
+                  <span>Compare heuristic logic</span>
+                  <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============================================================== -->
+      <!-- SCREEN 4: STUDY CHATBOT (Stitch 5fa9052343104b38b1ff31ce5a680a5f) -->
+      <!-- ============================================================== -->
+      <section id="tab-chatbot" class="tab-panel hidden w-full h-[calc(100vh-3.5rem)] flex flex-col justify-between" role="tabpanel" aria-labelledby="chatbot-heading">
+        <div class="w-full max-w-4xl mx-auto h-full flex flex-col justify-between px-space-md sm:px-space-lg relative">
+          
+          <!-- Top Context & Action Strip -->
+          <header class="py-space-sm flex items-center justify-between shrink-0 border-b border-outline-variant/60 dark:border-[#2a2a2a] bg-surface-container-lowest/80 dark:bg-[#121212]/80 z-20">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-7 h-7 rounded-lg bg-primary-container dark:bg-white text-on-primary dark:text-black flex items-center justify-center">
+                <span class="material-symbols-outlined text-[16px]">school</span>
+              </div>
+              <div class="flex flex-col">
+                <div class="flex items-center gap-space-xs">
+                  <h1 id="chatbot-heading" class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold">StudyMate AI</h1>
+                  <span class="font-label-sm text-label-sm text-secondary px-1.5 py-0.5 rounded bg-surface-container dark:bg-[#252525]">GPT-Academic</span>
+                </div>
+                <p class="font-label-md text-label-md text-secondary dark:text-[#888] hidden sm:block">Advanced academic reasoning, citation &amp; theory synthesis</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-space-xs">
+              <button class="flex items-center gap-1.5 px-space-sm py-1.5 border border-outline-variant dark:border-[#333] bg-surface-container-lowest dark:bg-[#202020] hover:bg-surface-container dark:hover:bg-[#282828] text-secondary hover:text-on-surface dark:hover:text-white font-label-md text-label-md transition-colors rounded-xl" id="chatClearBtn" title="Clear conversation history" type="button">
+                <span class="material-symbols-outlined text-[16px]">delete_sweep</span>
+                <span class="hidden sm:inline">Clear Chat</span>
+              </button>
+              <button class="p-1.5 border border-outline-variant dark:border-[#333] bg-surface-container-lowest dark:bg-[#202020] hover:bg-surface-container dark:hover:bg-[#282828] text-secondary hover:text-on-surface dark:hover:text-white transition-colors rounded-xl" id="exportChatBtn" title="Export session transcript" type="button">
+                <span class="material-symbols-outlined text-[16px]">ios_share</span>
+              </button>
+            </div>
+          </header>
+
+          <!-- Scrollable Conversation Stream -->
+          <div class="flex-1 overflow-y-auto py-space-lg space-y-space-xl pr-1 focus:outline-none" id="chatMessages">
+            
+            <!-- Timestamp / Context Pill -->
+            <div class="flex justify-center">
+              <span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary px-space-sm py-1 bg-surface-container-low dark:bg-[#1a1a1a] border border-outline-variant/60 dark:border-[#2e2e2e] rounded-full">
+                Interactive Study Session • Active
+              </span>
+            </div>
+
+            <!-- Empty State Prompt -->
+            <div id="chatEmpty" class="py-12 text-center text-secondary">
+              <div class="w-12 h-12 mx-auto rounded-2xl bg-surface-container-low dark:bg-[#202020] flex items-center justify-center text-on-surface dark:text-white mb-3">
+                <span class="material-symbols-outlined text-[24px]">chat_bubble</span>
+              </div>
+              <h3 class="font-headline-sm text-headline-sm text-on-surface dark:text-white font-semibold">How can I help you study today?</h3>
+              <p class="font-body-md text-secondary dark:text-[#888] mt-1 max-w-md mx-auto">Ask any question across coursework, theories, derivations, or problem sets.</p>
+              <div class="flex flex-wrap justify-center gap-2 mt-4 max-w-lg mx-auto">
+                <button class="chat-suggestion-chip font-body-sm text-body-sm text-secondary hover:text-on-surface dark:hover:text-white bg-surface-container-low dark:bg-[#202020] hover:bg-surface-container dark:hover:bg-[#282828] px-3.5 py-1.5 rounded-full transition-colors border border-outline-variant/40 dark:border-[#333]" data-prompt="Explain the difference between fiscal and monetary policy implementation lags">
+                  Fiscal vs Monetary Policy Lags
+                </button>
+                <button class="chat-suggestion-chip font-body-sm text-body-sm text-secondary hover:text-on-surface dark:hover:text-white bg-surface-container-low dark:bg-[#202020] hover:bg-surface-container dark:hover:bg-[#282828] px-3.5 py-1.5 rounded-full transition-colors border border-outline-variant/40 dark:border-[#333]" data-prompt="Prove why Dijkstra fails with negative edge weights">
+                  Dijkstra Negative Edge Proof
+                </button>
+                <button class="chat-suggestion-chip font-body-sm text-body-sm text-secondary hover:text-on-surface dark:hover:text-white bg-surface-container-low dark:bg-[#202020] hover:bg-surface-container dark:hover:bg-[#282828] px-3.5 py-1.5 rounded-full transition-colors border border-outline-variant/40 dark:border-[#333]" data-prompt="Explain the Master Theorem for recurrence relations">
+                  Master Theorem Recurrences
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Fixed / Floating Input Dock -->
+          <footer class="shrink-0 pb-4 pt-2 bg-gradient-to-t from-surface-container-lowest dark:from-[#121212] via-surface-container-lowest dark:via-[#121212] to-transparent">
+            <form id="chatForm" class="w-full border border-outline-variant dark:border-[#333] bg-surface-container-lowest dark:bg-[#1a1a1a] rounded-2xl p-2.5 sm:p-3 flex flex-col focus-within:border-primary dark:focus-within:border-white transition-all shadow-[0_4px_16px_rgba(0,0,0,0.03)]" onsubmit="event.preventDefault();">
+              
+              <!-- Textarea input field -->
+              <textarea class="w-full bg-transparent border-0 focus:ring-0 focus:outline-none resize-none font-body-md text-body-md text-on-surface dark:text-white placeholder:text-secondary p-1 leading-relaxed" id="chatInput" placeholder="Ask anything about your studies... (Enter to send, Shift + Enter for new line)" rows="2"></textarea>
+              
+              <!-- Utility Bar + Send Action -->
+              <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50 dark:border-[#2a2a2a] mt-1">
+                <div class="flex items-center gap-1 sm:gap-1.5 text-secondary">
+                  <!-- Attachment Button -->
+                  <button class="p-1.5 rounded-lg hover:bg-surface-container dark:hover:bg-[#282828] hover:text-on-surface transition-colors" title="Attach lecture PDF (redirects to summarizer)" type="button" onclick="switchTab('summarizer')">
+                    <span class="material-symbols-outlined text-[20px]">attach_file</span>
+                  </button>
+                  <!-- Web Academic Search Toggle -->
+                  <button id="webSearchToggle" class="flex items-center gap-1 px-2 py-1 border border-outline-variant dark:border-[#333] bg-surface-container-lowest dark:bg-[#222] hover:bg-surface-container dark:hover:bg-[#2c2c2c] text-on-surface dark:text-white font-label-md text-label-md transition-colors rounded-full" title="Toggle Academic Search" type="button">
+                    <span class="material-symbols-outlined text-[16px]">public</span>
+                    <span class="hidden sm:inline">Academic Web</span>
+                  </button>
+                  <span class="font-label-sm text-label-sm text-secondary font-mono pl-2" id="chatCharCount">0 / 8,000 characters</span>
+                </div>
+                
+                <!-- Send Action Button -->
+                <div class="flex items-center gap-2">
+                  <button id="chatSendBtn" class="w-8 h-8 bg-primary dark:bg-white text-on-primary dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed rounded-full cursor-pointer" title="Send message" type="submit">
+                    <span class="material-symbols-outlined text-[18px] btn-text">arrow_upward</span>
+                    <span class="btn-loader hidden w-3.5 h-3.5 rounded-full border-2 border-white dark:border-black border-t-transparent animate-spin"></span>
+                  </button>
+                </div>
+              </div>
+            </form>
+            
+            <!-- Academic Citation Disclaimer -->
+            <p class="font-label-sm text-label-sm text-secondary text-center mt-2 font-normal">
+              StudyMate can assist with research and coursework. Always verify key academic citations against original publications.
+            </p>
+          </footer>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="script.js"></script>
+</body>
+</html>

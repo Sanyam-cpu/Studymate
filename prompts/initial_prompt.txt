@@ -1,0 +1,178 @@
+ROLE
+You are a senior full-stack engineer and UI/UX designer working as an autonomous
+coding agent. You build clean, secure, beginner-readable web apps. Every file you
+write is commented well enough that a second-year B.Tech student can explain it
+in a viva. You verify your own work before declaring it finished.
+
+TASK
+Build and run a complete website called "StudyMate", an AI-powered campus study
+assistant, in the current workspace. It has exactly three features:
+
+1. SUMMARIZER
+   - Input: pasted text, OR an uploaded .pdf or .txt file (drag-and-drop and a
+     file picker).
+   - For PDFs: extract the text in the browser with pdf.js, show the extracted
+     text in the editable textarea, and display the file name and page count so
+     the user can review or edit it before summarizing.
+   - Option: style = "Short summary", "Bullet points", or "Exam revision notes".
+   - Output: the AI summary, shown as formatted Markdown.
+
+2. QUESTION EXPLAINER
+   - Input: an academic question, a level (Simple / Detailed / Exam-style), and
+     an optional subject field.
+   - Output: a step-by-step explanation with a worked example.
+
+3. STUDY CHATBOT
+   - A chat window with message bubbles, user and AI.
+   - It remembers the conversation within the session and supports follow-up
+     questions.
+   - It has a "Clear chat" button.
+
+All three features must get their answers from a real AI model through an API
+call. No hardcoded, mocked or predefined responses anywhere.
+
+CONTEXT
+- Purpose: help university students understand lecture material and clear doubts
+  quickly.
+- Target users: first- and second-year B.Tech students who find long notes and
+  hard concepts overwhelming.
+- Problem solved: students waste time on long reading and cannot always get a
+  doubt answered immediately.
+- This is a college Prompt Engineering course project. It will be pushed to
+  GitHub, deployed on Vercel, and defended in a viva. Simplicity, readability and
+  correctness matter more than fancy features.
+- Architecture (must follow exactly):
+  Browser (HTML/CSS/JS) -> POST /api/chat (Vercel serverless function, Node.js)
+  -> Google Gemini REST API -> JSON reply -> Browser.
+
+CONSTRAINTS
+Tech and structure
+- Frontend: plain HTML, CSS and vanilla JavaScript only. No React, no build step.
+- Backend: ONE serverless function at api/chat.js using ES modules and the
+  built-in fetch (Node 18+). No Express, no database, no login.
+- Folder structure: index.html, style.css, script.js, api/chat.js, package.json
+  (with "type": "module"), vercel.json (only if needed), .env.example,
+  .gitignore, README.md, prompts/initial_prompt.txt, PROMPT_LOG.md.
+- Allowed CDN libraries (pinned versions, loaded from cdnjs): "marked" and
+  "DOMPurify" for safe Markdown rendering, and pdf.js version 3.11.174:
+  https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js
+  Set pdfjsLib.GlobalWorkerOptions.workerSrc to
+  https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js
+
+AI integration
+- Provider: Google Gemini API via the REST endpoint
+  https://generativelanguage.googleapis.com/v1beta/models/<MODEL>:generateContent
+  with the key sent in the "x-goog-api-key" header.
+- Put the model name in a single constant at the top of api/chat.js, defaulting
+  to "gemini-2.5-flash", with a comment saying to verify the current model name in
+  Google AI Studio.
+- The API key must be read ONLY from process.env.GEMINI_API_KEY inside the
+  serverless function. It must NEVER appear in frontend code, in any committed
+  file, or in logs. Create .env.example containing only the variable name with
+  a placeholder. Put .env and node_modules in .gitignore.
+- The function accepts POST {mode, messages}, where mode is "summarize",
+  "explain" or "chat", and messages is an array of {role: "user"|"assistant",
+  content: string}.
+- Each mode has its own system prompt (sent as systemInstruction):
+  - summarize: expert note-taker; keeps only key ideas, definitions and formulas;
+    never adds facts that are not in the text; format = heading, summary, then
+    3 key takeaways.
+  - explain: patient university tutor; format = 1) simple definition,
+    2) step-by-step explanation, 3) one worked example, 4) common exam mistakes.
+  - chat: friendly study assistant; answers academic and study-related questions
+    only; politely refuses and redirects anything unrelated.
+- Convert roles correctly for Gemini ("assistant" becomes "model"). Make sure the
+  contents array starts with a "user" turn. For chat mode, send at most the last
+  20 messages.
+- Use generationConfig with temperature 0.4 and maxOutputTokens 2048. For
+  gemini-2.5 models also set thinkingConfig.thinkingBudget to 0, so the
+  thinking process does not use up the output tokens and cause empty replies.
+- If the response has no text (blocked, or an empty candidate), return a clear
+  error. Never crash.
+
+Error handling (all must be implemented and tested)
+- Only POST is allowed (405 otherwise).
+- Return 400 for an invalid mode, empty or whitespace-only input, a malformed
+  messages array, or input over 8000 characters.
+- Return 500 if the API key is missing on the server.
+- Return 502 for Gemini errors or an empty AI reply.
+- Add a 25-second timeout using AbortController.
+- The UI must show a friendly error message, never a raw stack trace, and must
+  disable the send button and show a loading indicator while waiting.
+PDF handling (all must be implemented and tested)
+- Extract text page by page with pdf.js (getDocument -> getPage ->
+  getTextContent), join items with spaces and pages with blank lines, and keep
+  the logic in one function: extractTextFromPdf(file).
+- Limits: maximum file size 10 MB, maximum 50 pages. Show a friendly error if
+  exceeded.
+- Accept only files with type application/pdf or a .pdf extension. Reject all
+  other types with a friendly message (.txt is also allowed).
+- If the extracted text has fewer than 50 characters, show: "This PDF looks
+  scanned or image-based, so text can't be extracted. Please use a text-based
+  PDF or paste the text."
+- Handle password-protected or corrupted PDFs with a friendly error and no crash.
+- Show a loading state while the PDF is being read.
+- Never upload the PDF file to the server. Only the extracted text is sent to
+  /api/chat.
+- Length limits: summarize mode allows up to 30000 characters; explain and chat
+  modes allow up to 8000. Enforce this in BOTH the frontend and api/chat.js. If
+  a PDF's text exceeds 30000 characters, show a warning that it was truncated
+  and truncate it cleanly.
+Frontend and UX
+- Responsive design, mobile-first. Navbar with the app name, three tabs (the
+  three features), and a light/dark mode toggle that remembers the choice.
+- Render AI replies as Markdown via marked, and ALWAYS pass the result through
+  DOMPurify before inserting it into the page (prevents XSS). Use textContent for
+  user-written text.
+- Each AI reply has a "Copy" button.
+- Chat history is kept in a JavaScript array in memory only.
+- A modern, clean, accessible design: good contrast, visible focus states, labels
+  on all inputs, and a clear empty-state message in each tab.
+- Use a single reusable function, askAI(mode, messages), for all API calls.
+
+Code quality
+- Comment every important block, and explain WHY, not only what.
+- No unused code, no placeholder TODOs, no fake data.
+
+OUTPUT FORMAT
+1. First, show a short plan with the file tree (max 15 lines).
+2. Create all files in the workspace.
+3. Create prompts/initial_prompt.txt containing this exact prompt, and
+   PROMPT_LOG.md with empty sections (Tool contribution table, Initial prompt
+   breakdown, Prompt iterations, System prompts per mode, Errors and fixes,
+   Testing log).
+4. Write README.md with: description, objectives, features, tech stack and AI
+   tools, architecture diagram (ASCII), setup steps, how to get a Gemini API key
+   (Google AI Studio), local run instructions using `vercel dev`, Vercel
+   deployment steps (including adding GEMINI_API_KEY as an environment
+   variable), a project structure section, and a screenshots placeholder.
+5. Run the app locally and test it in the browser. Then show me a verification
+   report against the checklist below. Mark each item PASS or FAIL, and fix every
+   FAIL before finishing.
+
+SELF-VERIFICATION CHECKLIST
+[ ] No API key in any file except an untracked local .env
+[ ] .gitignore excludes .env and node_modules
+[ ] Summarizer works for all 3 styles with real API output
+[ ] Explainer works for all 3 levels with real API output
+[ ] Chatbot answers a follow-up question using earlier context
+[ ] Chatbot refuses an off-topic question ("best pizza recipe?")
+[ ] Empty input shows a friendly error
+[ ] Input over 8000 characters is rejected
+[ ] A wrong or missing API key shows a friendly error and does not crash
+[ ] Loading state appears and the send button is disabled during requests
+[ ] Markdown renders correctly, and the output is sanitized with DOMPurify
+[ ] Dark mode toggle works and persists
+[ ] Layout works at 375px mobile width
+[ ] Copy button works, and Clear chat works
+[ ] README has every section listed above
+[ ] Input over the mode's limit (30000 summarize / 8000 explain and chat) is rejected
+[ ] A text-based PDF uploads, its text appears in the textarea, and it summarizes correctly
+[ ] File name and page count are displayed after the PDF upload
+[ ] A scanned or image-only PDF shows the friendly error
+[ ] A non-PDF/non-TXT file (e.g., .png) is rejected with a friendly message
+[ ] A PDF over 10 MB or 50 pages is rejected with a friendly message
+[ ] A .txt upload still works
+[ ] pdf.js worker loads with no console errors
+If something is ambiguous, do NOT stop to ask me questions. Choose the simplest
+reasonable option, and list your assumptions at the end of your report.
