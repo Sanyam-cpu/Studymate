@@ -146,7 +146,12 @@ export default async function handler(req, res) {
   }
 
   // --- Read the API key from environment variables ---
-  const apiKey = process.env.GEMINI_API_KEY;
+  // KEY-BY-MODE: explain uses its own key, other modes use the chat key, old key is the fallback
+  const requestedMode = req.body && req.body.mode;
+  const apiKey =
+    (requestedMode === "explain"
+      ? process.env.GEMINI_API_KEY_EXPLAINER
+      : process.env.GEMINI_API_KEY_CHAT) || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     // 500: server misconfiguration – the key should be set in Vercel dashboard
     return res.status(500).json({
