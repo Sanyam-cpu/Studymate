@@ -203,8 +203,8 @@
         <div class="flex items-center gap-space-sm min-w-0">
           <img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrOLx8WHXGGRnyQWDaJNFREiBdwfddOlhoE7EtCT0eqsd6nw-Y3BdEVTtHW8RYFZHu2TCFG0JuTB-fBIJ_n063GfseTXoFdplZttz9-39LUR93czP9ls0hV8Z4bKVd-uXYYxg1sJ3CYacfrJ-UZ9HQOpZ6K5LIr29fyCKl5pjWkRFjZxlf7kV7Tpf1N8PedJmIs7pH2kEbYazntVGoGTAZv9aMMM3nOuX_j5h0_z8" />
           <div class="flex flex-col min-w-0">
-            <span class="font-label-md text-label-md text-on-surface dark:text-white truncate font-semibold">Alex Rivera</span>
-            <span class="font-label-sm text-label-sm text-secondary truncate">Campus Pro Plan</span>
+            <span class="font-label-md text-label-md text-on-surface dark:text-white truncate font-semibold">Sanyam Soni</span>
+            <span class="font-label-sm text-label-sm text-secondary truncate">pro plan Plan</span>
           </div>
         </div>
         <div class="flex items-center gap-1 text-secondary">
